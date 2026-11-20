@@ -98,7 +98,8 @@ obtener_interfaces_pci() {
       [[ "$name" == "lo" ]] && continue
       [[ -e "$dev/device" ]] || continue
       path="$(readlink -f "$dev/device")"
-      echo "${path} ${name}"
+      pci="$(printf '%s\n' "$path" | grep -oE '[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\.[0-9a-f]' | tail -n 1 || true)"
+      echo "${pci:-$path} ${name}"
     done | sort -V | awk '{print $2}'
   )
 }
