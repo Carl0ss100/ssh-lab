@@ -172,7 +172,16 @@ ejecutar_fase1() {
   sysctl -p /etc/sysctl.d/99-escenario-no-routing.conf >/dev/null || true
 
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update -y
+  # Arreglo para Debian 11 / BunsenLabs (quita bullseye-security con 404 y repo BunsenLabs caducado)
+  if grep -qiE "bullseye|beryllium" /etc/os-release 2>/dev/null; then
+    echo "[*] Corrigiendo repositorios de Debian 11..."
+    cp -n /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true
+    mkdir -p /etc/apt/sources.list.d/bak
+    mv /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/bak/ 2>/dev/null || true
+    echo "deb https://deb.debian.org/debian bullseye main contrib non-free" > /etc/apt/sources.list
+  fi
+
+  apt-get update -y --allow-releaseinfo-change
   apt-get install -y curl wget net-tools iputils-ping openssh-client sshfs spice-vdagent || true
 
   # Permitir user_allow_other en FUSE (útil para montajes SSHFS)
